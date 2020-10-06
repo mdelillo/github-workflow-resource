@@ -50,24 +50,47 @@ func testGithubWorkflowResource(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("check", func() {
-		it("lists all runs of a github workflow", func() {
-			cmd := exec.Command(checkPath)
-			sourceParams := fmt.Sprintf(`{"source": {"repo": "%s", "workflow_id": "%s", "github_token": "%s"}}`,
-				repo,
-				workflowID,
-				os.Getenv("GITHUB_TOKEN"),
-			)
-			cmd.Stdin = strings.NewReader(sourceParams)
+		context("when no version is passed", func() {
+			it("lists all runs of a github workflow", func() {
+				cmd := exec.Command(checkPath)
+				sourceParams := fmt.Sprintf(`{"source": {"repo": "%s", "workflow_id": "%s", "github_token": "%s"}}`,
+					repo,
+					workflowID,
+					os.Getenv("GITHUB_TOKEN"),
+				)
+				cmd.Stdin = strings.NewReader(sourceParams)
 
-			output, err := cmd.CombinedOutput()
-			require.NoError(err, string(output))
+				output, err := cmd.CombinedOutput()
+				require.NoError(err, string(output))
 
-			assert.JSONEq(`[
+				assert.JSONEq(`[
   {"id": "275207818"},
   {"id": "275208078"},
   {"id": "275208338"},
   {"id": "275208364"}
 ]`, string(output))
+			})
+		})
+
+		context("when a version is passed", func() {
+			it("lists runs of a github workflow since the given version", func() {
+				cmd := exec.Command(checkPath)
+				sourceParams := fmt.Sprintf(`{"source": {"repo": "%s", "workflow_id": "%s", "github_token": "%s"}, "version": {"id": "%s"}}`,
+					repo,
+					workflowID,
+					os.Getenv("GITHUB_TOKEN"),
+					"275208338",
+				)
+				cmd.Stdin = strings.NewReader(sourceParams)
+
+				output, err := cmd.CombinedOutput()
+				require.NoError(err, string(output))
+
+				assert.JSONEq(`[
+  {"id": "275208338"},
+  {"id": "275208364"}
+]`, string(output))
+			})
 		})
 	})
 }

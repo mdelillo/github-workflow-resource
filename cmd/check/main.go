@@ -10,16 +10,17 @@ import (
 )
 
 type CheckRequest struct {
-	Source Source `json:"source"`
+	Source  Source  `json:"source"`
+	Version Version `json:"version"`
 }
+
+type CheckResponse []Version
 
 type Source struct {
 	Repo        string `json:"repo"`
 	WorkflowID  string `json:"workflow_id"`
 	GithubToken string `json:"github_token"`
 }
-
-type CheckResponse []Version
 
 type Version struct {
 	ID string `json:"id"`
@@ -56,8 +57,19 @@ func check() (string, error) {
 
 	var response CheckResponse
 
+	returnVersions := true
+	if request.Version.ID != "" {
+		returnVersions = false
+	}
+
 	for _, workflowRun := range workflowRuns {
-		response = append(response, Version{ID: strconv.Itoa(workflowRun.ID)})
+		if request.Version.ID == strconv.Itoa(workflowRun.ID) {
+			returnVersions = true
+		}
+
+		if returnVersions {
+			response = append(response, Version{ID: strconv.Itoa(workflowRun.ID)})
+		}
 	}
 
 	output, err := json.Marshal(response)
