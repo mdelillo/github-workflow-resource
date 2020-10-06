@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	repo = "mdelillo/github-workflow-resource"
+	repo       = "mdelillo/github-workflow-resource"
 	workflowID = "2743569"
 )
 
