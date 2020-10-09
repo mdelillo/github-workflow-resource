@@ -19,8 +19,10 @@ type WorkflowRun struct {
 	ID         int       `json:"id"`
 	Status     string    `json:"status"`
 	Conclusion string    `json:"conclusion"`
-	URL        string    `json:"html_url"`
+	URL        string    `json:"url"`
+	HtmlURL    string    `json:"html_url"`
 	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type Option func(*Client)
@@ -86,8 +88,40 @@ func (c *Client) GetWorkflowRuns(repo, workflowID string) ([]WorkflowRun, error)
 
 	var workflowRuns []WorkflowRun
 	for _, w := range workflowRunsResp.WorkflowRuns {
-		workflowRuns = append([]WorkflowRun{w}, workflowRuns...)
+		workflowRuns = append(workflowRuns, w)
 	}
 
 	return workflowRuns, nil
+}
+
+func (c *Client) GetWorkflowRun(repo, runID string) (WorkflowRun, error) {
+	url := fmt.Sprintf("%s/repos/%s/actions/runs/%s", c.endpoint, repo, runID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return WorkflowRun{}, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", "token "+c.token)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return WorkflowRun{}, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return WorkflowRun{}, fmt.Errorf("failed to read body: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return WorkflowRun{}, fmt.Errorf("got unsuccessful response from github: %d\n%s", resp.StatusCode, string(body))
+	}
+
+	var workflowRun WorkflowRun
+	err = json.Unmarshal(body, &workflowRun)
+	if err != nil {
+		return WorkflowRun{}, fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+
+	return workflowRun, nil
 }

@@ -32,7 +32,11 @@ func testGithub(t *testing.T, context spec.G, it spec.S) {
 				_, _ = w.Write([]byte(`{"message": "Not Found"}`))
 			}
 
-			// assert about Auth header
+			if r.Header.Get("Authorization") != "token some-token" {
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"message": "Unauthorized"}`))
+			}
+
 			_, _ = w.Write([]byte(`
 {
   "total_count": 4,
@@ -41,29 +45,37 @@ func testGithub(t *testing.T, context spec.G, it spec.S) {
       "id": 4,
       "status": "queued",
       "conclusion": null,
-      "html_url": "some-url-4",
-      "created_at": "2020-01-04T00:00:00Z"
+      "url": "some-url-4",
+      "html_url": "some-html-url-4",
+      "created_at": "2020-01-04T00:00:00Z",
+      "updated_at": "2020-01-04T01:00:00Z"
     },
     {
       "id": 3,
       "status": "in_progress",
       "conclusion": null,
-      "html_url": "some-url-3",
-      "created_at": "2020-01-03T00:00:00Z"
+      "url": "some-url-3",
+      "html_url": "some-html-url-3",
+      "created_at": "2020-01-03T00:00:00Z",
+      "updated_at": "2020-01-03T01:00:00Z"
     },
     {
       "id": 2,
       "status": "completed",
       "conclusion": "success",
-      "html_url": "some-url-2",
-      "created_at": "2020-01-02T00:00:00Z"
+      "url": "some-url-2",
+      "html_url": "some-html-url-2",
+      "created_at": "2020-01-02T00:00:00Z",
+      "updated_at": "2020-01-02T01:00:00Z"
     },
     {
       "id": 1,
       "status": "completed",
       "conclusion": "failure",
-      "html_url": "some-url-1",
-      "created_at": "2020-01-01T00:00:00Z"
+      "url": "some-url-1",
+      "html_url": "some-html-url-1",
+      "created_at": "2020-01-01T00:00:00Z",
+      "updated_at": "2020-01-01T01:00:00Z"
     }
   ]
 }
@@ -80,32 +92,40 @@ func testGithub(t *testing.T, context spec.G, it spec.S) {
 
 			assert.Equal([]github.WorkflowRun{
 				{
-					ID:         1,
-					Status:     "completed",
-					Conclusion: "failure",
-					URL:        "some-url-1",
-					CreatedAt:  time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-				},
-				{
-					ID:         2,
-					Status:     "completed",
-					Conclusion: "success",
-					URL:        "some-url-2",
-					CreatedAt:  time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC),
+					ID:         4,
+					Status:     "queued",
+					Conclusion: "",
+					URL:        "some-url-4",
+					HtmlURL:    "some-html-url-4",
+					CreatedAt:  time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:  time.Date(2020, 1, 4, 1, 0, 0, 0, time.UTC),
 				},
 				{
 					ID:         3,
 					Status:     "in_progress",
 					Conclusion: "",
 					URL:        "some-url-3",
+					HtmlURL:    "some-html-url-3",
 					CreatedAt:  time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:  time.Date(2020, 1, 3, 1, 0, 0, 0, time.UTC),
 				},
 				{
-					ID:         4,
-					Status:     "queued",
-					Conclusion: "",
-					URL:        "some-url-4",
-					CreatedAt:  time.Date(2020, 1, 4, 0, 0, 0, 0, time.UTC),
+					ID:         2,
+					Status:     "completed",
+					Conclusion: "success",
+					URL:        "some-url-2",
+					HtmlURL:    "some-html-url-2",
+					CreatedAt:  time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:  time.Date(2020, 1, 2, 1, 0, 0, 0, time.UTC),
+				},
+				{
+					ID:         1,
+					Status:     "completed",
+					Conclusion: "failure",
+					URL:        "some-url-1",
+					HtmlURL:    "some-html-url-1",
+					CreatedAt:  time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:  time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC),
 				},
 			}, workflowRuns)
 		})

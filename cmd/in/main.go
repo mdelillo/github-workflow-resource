@@ -16,17 +16,17 @@ func main() {
 		fatal("failed to read stdin", err)
 	}
 
-	var request resource.CheckRequest
+	var request resource.InRequest
 	err = json.Unmarshal(stdin, &request)
 	if err != nil {
 		fatal("failed to unmarshal input", err)
 	}
 
-	check := commands.NewCheck(github.NewClient(request.Source.GithubToken))
+	in := commands.NewIn(github.NewClient(request.Source.GithubToken))
 
-	response, err := check.Execute(request)
+	response, err := in.Execute(request)
 	if err != nil {
-		fatal("failed to execute check", err)
+		fatal("failed to execute in", err)
 	}
 
 	output, err := json.Marshal(response)
