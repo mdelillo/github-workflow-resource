@@ -36,17 +36,23 @@ func testCheck(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		tempFile, err := ioutil.TempFile("", "github-workflow-resource-check")
-		require.NoError(err)
-		checkPath = tempFile.Name()
-		require.NoError(tempFile.Close())
+		if _, err := os.Stat("/opt/resource/check"); err == nil {
+			checkPath = "/opt/resource/check"
+		} else {
+			tempFile, err := ioutil.TempFile("", "github-workflow-resource-check")
+			require.NoError(err)
+			checkPath = tempFile.Name()
+			require.NoError(tempFile.Close())
 
-		output, err := exec.Command("go", "build", "-o", checkPath).CombinedOutput()
-		require.NoError(err, string(output))
+			output, err := exec.Command("go", "build", "-o", checkPath).CombinedOutput()
+			require.NoError(err, string(output))
+		}
 	})
 
 	it.After(func() {
-		_ = os.Remove(checkPath)
+		if checkPath != "/opt/resource/check" {
+			_ = os.Remove(checkPath)
+		}
 	})
 
 	it("lists all runs of a github workflow", func() {

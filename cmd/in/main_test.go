@@ -42,17 +42,23 @@ func testIn(t *testing.T, context spec.G, it spec.S) {
 		outputDir, err = ioutil.TempDir("", "github-workflow-resource-in")
 		require.NoError(err)
 
-		tempFile, err := ioutil.TempFile("", "github-workflow-resource-in")
-		require.NoError(err)
-		inPath = tempFile.Name()
-		require.NoError(tempFile.Close())
+		if _, err := os.Stat("/opt/resource/in"); err == nil {
+			inPath = "/opt/resource/in"
+		} else {
+			tempFile, err := ioutil.TempFile("", "github-workflow-resource-in")
+			require.NoError(err)
+			inPath = tempFile.Name()
+			require.NoError(tempFile.Close())
 
-		output, err := exec.Command("go", "build", "-o", inPath).CombinedOutput()
-		require.NoError(err, string(output))
+			output, err := exec.Command("go", "build", "-o", inPath).CombinedOutput()
+			require.NoError(err, string(output))
+		}
 	})
 
 	it.After(func() {
-		_ = os.Remove(inPath)
+		if inPath != "/opt/resource/in" {
+			_ = os.Remove(inPath)
+		}
 		_ = os.RemoveAll(outputDir)
 	})
 
