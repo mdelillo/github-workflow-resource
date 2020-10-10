@@ -56,7 +56,7 @@ func WithEndpoint(endpoint string) func(*Client) {
 	}
 }
 
-func (c *Client) GetWorkflowRuns(repo, workflowID string) ([]WorkflowRun, error) {
+func (c Client) GetWorkflowRuns(repo, workflowID string) ([]WorkflowRun, error) {
 	url := fmt.Sprintf("%s/repos/%s/actions/workflows/%s/runs", c.endpoint, repo, workflowID)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -95,7 +95,7 @@ func (c *Client) GetWorkflowRuns(repo, workflowID string) ([]WorkflowRun, error)
 	return workflowRuns, nil
 }
 
-func (c *Client) GetWorkflowRun(repo, runID string) (WorkflowRun, error) {
+func (c Client) GetWorkflowRun(repo, runID string) (WorkflowRun, error) {
 	url := fmt.Sprintf("%s/repos/%s/actions/runs/%s", c.endpoint, repo, runID)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

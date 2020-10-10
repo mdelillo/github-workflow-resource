@@ -8,6 +8,7 @@ import (
 	"github.com/mdelillo/github-workflow-resource/internal/github"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -22,9 +23,14 @@ func main() {
 		fatal("failed to unmarshal input", err)
 	}
 
-	in := commands.NewIn(github.NewClient(request.Source.GithubToken))
+	metadataFile, err := os.OpenFile(filepath.Join(os.Args[1], "metadata.json"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		fatal("failed to open metadata.json", err)
+	}
+	defer metadataFile.Close()
 
-	response, err := in.Execute(request, os.Args[1])
+	in := commands.NewIn(github.NewClient(request.Source.GithubToken))
+	response, err := in.Execute(request, metadataFile)
 	if err != nil {
 		fatal("failed to execute in", err)
 	}

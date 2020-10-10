@@ -17,7 +17,7 @@ func NewCheck(githubClient GithubClient) *Check {
 	}
 }
 
-func (c *Check) Execute(request resource.CheckRequest) (resource.CheckResponse, error) {
+func (c Check) Execute(request resource.CheckRequest) (resource.CheckResponse, error) {
 	workflowRuns, err := c.githubClient.GetWorkflowRuns(request.Source.Repo, request.Source.WorkflowID)
 	if err != nil {
 		return resource.CheckResponse{}, fmt.Errorf("failed to get workflow runs: %w", err)
@@ -40,7 +40,7 @@ func (c *Check) Execute(request resource.CheckRequest) (resource.CheckResponse, 
 	return response, nil
 }
 
-func (c *Check) workflowRunMatches(workflowRun github.WorkflowRun, source resource.Source) bool {
+func (c Check) workflowRunMatches(workflowRun github.WorkflowRun, source resource.Source) bool {
 	if source.Status != "" && workflowRun.Status != source.Status {
 		return false
 	}

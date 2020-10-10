@@ -1,13 +1,18 @@
 package resource
 
 type InRequest struct {
-	Source  Source  `json:"source"`
-	Version Version `json:"version"`
+	Source  Source   `json:"source"`
+	Version Version  `json:"version"`
+	Params  InParams `json:"params"`
 }
 
 type InResponse struct {
 	Version  Version    `json:"version"`
 	Metadata []Metadata `json:"metadata"`
+}
+
+type InParams struct {
+	WaitForCompletion bool `json:"wait_for_completion"`
 }
 
 type Source struct {

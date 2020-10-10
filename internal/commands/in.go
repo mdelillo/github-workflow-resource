@@ -4,25 +4,50 @@ import (
 	"encoding/json"
 	"fmt"
 	resource "github.com/mdelillo/github-workflow-resource"
-	"io/ioutil"
-	"path/filepath"
+	"github.com/mdelillo/github-workflow-resource/internal/github"
+	"io"
 	"time"
 )
 
 type In struct {
 	githubClient GithubClient
+	requestDelay time.Duration
 }
 
-func NewIn(githubClient GithubClient) *In {
-	return &In{
+type InOption func(*In)
+
+func NewIn(githubClient GithubClient, options ...InOption) *In {
+	in := &In{
 		githubClient: githubClient,
+		requestDelay: 10 * time.Second,
+	}
+	for _, option := range options {
+		option(in)
+	}
+	return in
+}
+
+func WithRequestDelay(requestDelay time.Duration) func(in *In) {
+	return func(i *In) {
+		i.requestDelay = requestDelay
 	}
 }
 
-func (i *In) Execute(request resource.InRequest, outputDir string) (resource.InResponse, error) {
-	workflowRun, err := i.githubClient.GetWorkflowRun(request.Source.Repo, request.Version.ID)
-	if err != nil {
-		return resource.InResponse{}, fmt.Errorf("failed to get workflow run: %w", err)
+func (i In) Execute(request resource.InRequest, metadataFile io.Writer) (resource.InResponse, error) {
+	var workflowRun github.WorkflowRun
+
+	for {
+		var err error
+		workflowRun, err = i.githubClient.GetWorkflowRun(request.Source.Repo, request.Version.ID)
+		if err != nil {
+			return resource.InResponse{}, fmt.Errorf("failed to get workflow run: %w", err)
+		}
+
+		if workflowRun.Status == "completed" {
+			break
+		}
+
+		time.Sleep(i.requestDelay)
 	}
 
 	metadata, err := json.Marshal(workflowRun)
@@ -30,9 +55,7 @@ func (i *In) Execute(request resource.InRequest, outputDir string) (resource.InR
 		return resource.InResponse{}, fmt.Errorf("failed to marshal workflow run: %w", err)
 	}
 
-	metadataPath := filepath.Join(outputDir, "metadata.json")
-
-	err = ioutil.WriteFile(metadataPath, metadata, 0644)
+	_, err = metadataFile.Write(metadata)
 	if err != nil {
 		return resource.InResponse{}, fmt.Errorf("failed to write metadata: %w", err)
 	}
