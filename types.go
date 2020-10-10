@@ -14,6 +14,8 @@ type Source struct {
 	Repo        string `json:"repo"`
 	WorkflowID  string `json:"workflow_id"`
 	GithubToken string `json:"github_token"`
+	Status      string `json:"status"`
+	Conclusion  string `json:"conclusion"`
 }
 
 type Version struct {

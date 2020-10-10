@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	resource "github.com/mdelillo/github-workflow-resource"
+	"github.com/mdelillo/github-workflow-resource/internal/github"
 	"strconv"
 )
 
@@ -25,6 +26,10 @@ func (c *Check) Execute(request resource.CheckRequest) (resource.CheckResponse, 
 	var response resource.CheckResponse
 
 	for _, workflowRun := range workflowRuns {
+		if !c.workflowRunMatches(workflowRun, request.Source) {
+			continue
+		}
+
 		response = append([]resource.Version{{ID: strconv.Itoa(workflowRun.ID)}}, response...)
 
 		if request.Version.ID == strconv.Itoa(workflowRun.ID) {
@@ -33,4 +38,16 @@ func (c *Check) Execute(request resource.CheckRequest) (resource.CheckResponse, 
 	}
 
 	return response, nil
+}
+
+func (c *Check) workflowRunMatches(workflowRun github.WorkflowRun, source resource.Source) bool {
+	if source.Status != "" && workflowRun.Status != source.Status {
+		return false
+	}
+
+	if source.Conclusion != "" && workflowRun.Conclusion != source.Conclusion {
+		return false
+	}
+
+	return true
 }
