@@ -44,6 +44,6 @@ func main() {
 }
 
 func fatal(message string, err error) {
-	fmt.Printf("Error: %s: %s\n", message, err.Error())
+	fmt.Fprintf(os.Stderr, "Error: %s: %s\n", message, err.Error())
 	os.Exit(1)
 }

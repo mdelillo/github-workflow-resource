@@ -50,7 +50,7 @@ func (i In) Execute(request resource.InRequest, metadataFile io.Writer) (resourc
 		time.Sleep(i.requestDelay)
 	}
 
-	metadata, err := json.Marshal(workflowRun)
+	metadata, err := json.MarshalIndent(workflowRun, "", "  ")
 	if err != nil {
 		return resource.InResponse{}, fmt.Errorf("failed to marshal workflow run: %w", err)
 	}

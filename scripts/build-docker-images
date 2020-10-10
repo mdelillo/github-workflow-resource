@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root_dir="$(cd "$(dirname "$0")" && cd .. && pwd)"
+
+if [[ -z "${GITHUB_TOKEN}" ]]; then
+  echo "Must set GITHUB_TOKEN"
+fi
+
+docker build \
+  -f "${root_dir}/dockerfiles/alpine/Dockerfile" \
+  -t github-workflow-resource:alpine \
+  --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" \
+  "${root_dir}"
+
+docker build \
+  -f "${root_dir}/dockerfiles/ubuntu/Dockerfile" \
+  -t github-workflow-resource:ubuntu \
+  --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" \
+  "${root_dir}"
