@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -32,11 +33,16 @@ func testIn(t *testing.T, context spec.G, it spec.S) {
 		assert  = assertpkg.New(t)
 		require = requirepkg.New(t)
 
-		inPath string
+		inPath    string
+		outputDir string
 	)
 
 	it.Before(func() {
-		tempFile, err := ioutil.TempFile("", "github-workflow-resource")
+		var err error
+		outputDir, err = ioutil.TempDir("", "github-workflow-resource-in")
+		require.NoError(err)
+
+		tempFile, err := ioutil.TempFile("", "github-workflow-resource-in")
 		require.NoError(err)
 		inPath = tempFile.Name()
 		require.NoError(tempFile.Close())
@@ -47,10 +53,11 @@ func testIn(t *testing.T, context spec.G, it spec.S) {
 
 	it.After(func() {
 		_ = os.Remove(inPath)
+		_ = os.RemoveAll(outputDir)
 	})
 
-	it("returns the results of the workflow run", func() {
-		cmd := exec.Command(inPath)
+	it("writes workflow run metadata to metadata.json and stdout", func() {
+		cmd := exec.Command(inPath, outputDir)
 		sourceParams := fmt.Sprintf(`{"source": {"repo": "%s", "workflow_id": "%s", "github_token": "%s"}, "version": {"id": "%s"}}`,
 			repo,
 			workflowID,
@@ -67,13 +74,27 @@ func testIn(t *testing.T, context spec.G, it spec.S) {
     "id": "275208338"
   },
   "metadata": [
-    {"name": "status",     "value": "completed"},
-    {"name": "conclusion", "value": "success"},
-    {"name": "url",        "value": "https://api.github.com/repos/mdelillo/github-workflow-resource/actions/runs/275208338"},
-    {"name": "html_url",   "value": "https://github.com/mdelillo/github-workflow-resource/actions/runs/275208338"},
-    {"name": "created_at", "value": "2020-09-27T13:57:52Z"},
-    {"name": "updated_at", "value": "2020-09-27T13:58:05Z"}
+    {"name": "status",      "value": "completed"},
+    {"name": "conclusion",  "value": "success"},
+    {"name": "url",         "value": "https://api.github.com/repos/mdelillo/github-workflow-resource/actions/runs/275208338"},
+    {"name": "html_url",    "value": "https://github.com/mdelillo/github-workflow-resource/actions/runs/275208338"},
+    {"name": "created_at",  "value": "2020-09-27T13:57:52Z"},
+    {"name": "updated_at",  "value": "2020-09-27T13:58:05Z"}
   ]
 }`, string(output))
+
+		metadata, err := ioutil.ReadFile(filepath.Join(outputDir, "metadata.json"))
+		require.NoError(err)
+
+		assert.JSONEq(`{
+  "id": 275208338,
+  "status": "completed",
+  "conclusion": "success",
+  "workflow_id": 2743569,
+  "url": "https://api.github.com/repos/mdelillo/github-workflow-resource/actions/runs/275208338",
+  "html_url": "https://github.com/mdelillo/github-workflow-resource/actions/runs/275208338",
+  "created_at": "2020-09-27T13:57:52Z",
+  "updated_at": "2020-09-27T13:58:05Z"
+}`, string(metadata))
 	})
 }

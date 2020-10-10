@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	resource "github.com/mdelillo/github-workflow-resource"
+	"io/ioutil"
+	"path/filepath"
 	"time"
 )
 
@@ -16,10 +19,22 @@ func NewIn(githubClient GithubClient) *In {
 	}
 }
 
-func (i *In) Execute(request resource.InRequest) (resource.InResponse, error) {
+func (i *In) Execute(request resource.InRequest, outputDir string) (resource.InResponse, error) {
 	workflowRun, err := i.githubClient.GetWorkflowRun(request.Source.Repo, request.Version.ID)
 	if err != nil {
 		return resource.InResponse{}, fmt.Errorf("failed to get workflow run: %w", err)
+	}
+
+	metadata, err := json.Marshal(workflowRun)
+	if err != nil {
+		return resource.InResponse{}, fmt.Errorf("failed to marshal workflow run: %w", err)
+	}
+
+	metadataPath := filepath.Join(outputDir, "metadata.json")
+
+	err = ioutil.WriteFile(metadataPath, metadata, 0644)
+	if err != nil {
+		return resource.InResponse{}, fmt.Errorf("failed to write metadata: %w", err)
 	}
 
 	response := resource.InResponse{

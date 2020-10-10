@@ -17,6 +17,7 @@ type Client struct {
 
 type WorkflowRun struct {
 	ID         int       `json:"id"`
+	WorkflowID int       `json:"workflow_id"`
 	Status     string    `json:"status"`
 	Conclusion string    `json:"conclusion"`
 	URL        string    `json:"url"`

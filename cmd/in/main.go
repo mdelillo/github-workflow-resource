@@ -24,7 +24,7 @@ func main() {
 
 	in := commands.NewIn(github.NewClient(request.Source.GithubToken))
 
-	response, err := in.Execute(request)
+	response, err := in.Execute(request, os.Args[1])
 	if err != nil {
 		fatal("failed to execute in", err)
 	}
